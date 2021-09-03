@@ -21,3 +21,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+/packages/cli/node_modules
+/packages/local-api/node_modules
