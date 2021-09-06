@@ -1,21 +1,43 @@
-import express from 'express';
+import express from "express";
+import fs from "fs/promises";
+import path from 'path';
 
-const router = express.Router();
+interface Cell {
+    id: string;
+    content: string;
+    type: 'text' | 'code';
+}
 
-router.get('/cells', async (req, res) => {
-    // make sure cell storage file exists
-    // if file does not exist add in a default list of cells
+export const createCellsRouter = (filename: string, dir: string) => {
+  const router = express.Router();
+  router.use(express.json());
 
-    // Read file
-    // Parse list of cells
-    // send list of cells back to browser
-});
+  const fullPath = path.join(dir, filename)
+  router.get("/cells", async (req, res) => {
+    try {
+        const result = await fs.readFile(fullPath, { encoding: 'utf-8'});
 
-router.post('cells', async (req, res) => {
-    // Make sure file exists
-    // create if it does not
+        res.send(JSON.parse(result));
+    } catch (err: any) {
+        if (err.code === 'ENOENT') {
+            await fs.writeFile(fullPath, '[]', 'utf-8');
+            res.send([]);
+        } else {
+            throw err;
+        }
+    }
 
+  });
+
+  router.post("/cells", async (req, res) => {
     // take list of cells from req
+    const { cells }: { cells: Cell[] }  = req.body;
     // serialize cells
     // write cells into the file
-});
+    await fs.writeFile(fullPath, JSON.stringify(cells), 'utf-8');
+
+    res.send({ status: '200' })
+  });
+
+  return router;
+};
